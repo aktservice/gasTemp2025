@@ -1,0 +1,2 @@
+# gasTemp2025
+GoogleAppsScript開発用テンプレート
