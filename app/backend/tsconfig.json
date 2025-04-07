@@ -3,5 +3,5 @@
     "lib": ["esnext"],
     "experimentalDecorators": true
   },
-  "include": ["./src"]
+  "include": ["./src", "tsconfig.json"]
 }

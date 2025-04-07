@@ -5,7 +5,7 @@ esbuild
     entryPoints: ["./app/backend/src/main.ts"],
     bundle: true,
     //minify: true,
-    outfile: "./dist/main.js",
+    outfile: "./dist/backend.js",
     target: "ES2021",
     plugins: [GasPlugin],
   })
