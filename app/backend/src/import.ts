@@ -1,5 +1,5 @@
 import { CONFIGINFO, SHEETNAMES } from "./constValues";
-import { setLog_ } from "./main";
+import { setLog_ } from "./webApp";
 interface uploadBlob {
   data: string;
   mimeType: string;
