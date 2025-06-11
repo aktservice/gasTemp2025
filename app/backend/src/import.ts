@@ -1,11 +1,19 @@
-import { SHEETNAMES } from "./constValues";
+import { CONFIGINFO, SHEETNAMES } from "./constValues";
+import { setLog_ } from "./main";
+interface uploadBlob {
+  data: string;
+  mimeType: string;
+  fileName: string;
+  folder: string;
+  user: string;
+  isOcr: boolean;
+}
 /**
  * @description HTML側から実行するファイルをドライブへ送信する関数 for frontend
  * @author yoshitaka <sato-yoshitaka@aktio.co.jp>
  * @date 01/04/2024
  * @param {uploadBlob}uploadBlob
  */
-
 export function importFile(uploadBlob: uploadBlob): string {
   const blb = Utilities.newBlob(
     Utilities.base64Decode(uploadBlob.data),
@@ -17,7 +25,7 @@ export function importFile(uploadBlob: uploadBlob): string {
   if (!sh) {
     throw new Error(`Sheet with name "${SHEETNAMES.CONFIGSHNAME}" not found.`);
   }
-  const idRng = CONFIGRNGINFO.ATTACHFOLDERID;
+  const idRng = CONFIGINFO.ATTACHFOLDER_ID_RNG;
   const rootFolderId = sh.getRange(idRng).getValue();
 
   const file = Drive.Files.create(
@@ -30,7 +38,7 @@ export function importFile(uploadBlob: uploadBlob): string {
     { supportsAllDrives: true, fields: "webViewLink,name,id" }
   );
 
-  setLog_("upload", [
+  setLog_([
     file.webViewLink ?? "defaultWebViewLink",
     uploadBlob.folder,
     file.name ?? "defaultFileName",
@@ -53,26 +61,4 @@ export function importFile(uploadBlob: uploadBlob): string {
 export function getSessionUser(): string {
   const userEmailAddress = Session.getActiveUser().getEmail();
   return userEmailAddress;
-}
-/**
- * @description ログをセット
- * @author yoshitaka <sato-yoshitaka@aktio.co.jp>
- * @date 2023-03-27
- * @param {string} [change="access"]
- * @param {string} [machineName=""]
- * @param {string} [userName=""]
- */
-function setLog_(change = "access", addData: string[]): void {
-  const sp = SpreadsheetApp.getActiveSpreadsheet();
-  const sh = sp.getSheetByName(SHEETNAMES.MAINSHEETNAME);
-  const accessDate = new Date();
-  const sessionUser = Session.getActiveUser().getEmail();
-  let appendData = [accessDate, sessionUser, change].concat(addData);
-  const lock = LockService.getScriptLock();
-  if (lock.tryLock(10000)) {
-    sh?.appendRow(appendData);
-    lock.releaseLock();
-  } else {
-    Logger.log("appendError");
-  }
 }

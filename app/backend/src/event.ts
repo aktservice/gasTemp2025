@@ -1,6 +1,3 @@
-export const CONFIGDATA = {
-  CONFIGMESSAGE: "こんにちは",
-};
 /*
  * @description メニュー用
  * @author yoshitaka <sato-yoshitaka@aktio.co.jp>
@@ -12,8 +9,4 @@ export function onOpen() {
   menu.addItem("認証", "excuteMain");
   menu.addItem("実行", "excuteMain");
   menu.addToUi();
-}
-
-export function getHello(message: string = "hello") {
-  Logger.log(message);
 }
