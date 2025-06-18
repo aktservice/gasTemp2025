@@ -1,22 +1,8 @@
 import "./camera.css";
 
-/**
- * @description customEvent用の定義
- * @author yoshitaka <sato-yoshitaka@aktio.co.jp>
- * @date 11/06/2025
- * @export
- * @interface TakePhotoEventDetail
- */
 export interface TakePhotoEventDetail {
   dataURL: string;
 }
-/**
- * @description カスタムイベントを定義
- * @author yoshitaka <sato-yoshitaka@aktio.co.jp>
- * @date 11/06/2025
- * @export
- * @interface CameraEventMap
- */
 export interface CameraEventMap {
   takePhotoEvent: CustomEvent<TakePhotoEventDetail>;
 }
@@ -31,46 +17,19 @@ export interface CameraEventMap {
  * @extends {EventTarget}
  */
 export class CameraManager extends EventTarget {
-  /**
-   * @description addEventListnerのオーバーロード
-   * @author yoshitaka <sato-yoshitaka@aktio.co.jp>
-   * @date 11/06/2025
-   * @template K
-   * @param {K} type
-   * @param {(this: CameraManager, event: CameraEventMap[K]) => void} listener
-   * @param {(boolean | AddEventListenerOptions)} [options]
-   * @memberof CameraManager
-   */
+  // addEventListener の型定義を、私たちのイベントマップに合わせて上書きします
   public addEventListener<K extends keyof CameraEventMap>(
     type: K,
     listener: (this: CameraManager, event: CameraEventMap[K]) => void,
     options?: boolean | AddEventListenerOptions
   ): void;
 
-  /**
-   * @description addEventListnerのオーバーロード
-   * @author yoshitaka <sato-yoshitaka@aktio.co.jp>
-   * @date 11/06/2025
-   * @param {string} type
-   * @param {EventListenerOrEventListenerObject} listener
-   * @param {(boolean | AddEventListenerOptions)} [options]
-   * @memberof CameraManager
-   */
   public addEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject,
     options?: boolean | AddEventListenerOptions
   ): void;
 
-  /**
-   * @description addEventListnerのオーバーロード
-   * @author yoshitaka <sato-yoshitaka@aktio.co.jp>
-   * @date 11/06/2025
-   * @param {string} type
-   * @param {(EventListenerOrEventListenerObject | null)} callback
-   * @param {(boolean | AddEventListenerOptions)} [options]
-   * @memberof CameraManager
-   */
   public addEventListener(
     type: string,
     callback: EventListenerOrEventListenerObject | null,
@@ -78,46 +37,21 @@ export class CameraManager extends EventTarget {
   ): void {
     super.addEventListener(type, callback, options);
   }
-  /**
-   * @description removeEventListnerのオーバーロード
-   * @author yoshitaka <sato-yoshitaka@aktio.co.jp>
-   * @date 11/06/2025
-   * @template K
-   * @param {K} type
-   * @param {(this: CameraManager, event: CameraEventMap[K]) => any} listener
-   * @param {(boolean | EventListenerOptions)} [options]
-   * @memberof CameraManager
-   */
+  // 【宣言1】カスタムイベント用
   public removeEventListener<K extends keyof CameraEventMap>(
     type: K,
     listener: (this: CameraManager, event: CameraEventMap[K]) => any,
     options?: boolean | EventListenerOptions
   ): void;
 
-  /**
-   * @description removeEventListnerのオーバーロード
-   * @author yoshitaka <sato-yoshitaka@aktio.co.jp>
-   * @date 11/06/2025
-   * @param {string} type
-   * @param {EventListenerOrEventListenerObject} listener
-   * @param {(boolean | EventListenerOptions)} [options]
-   * @memberof CameraManager
-   */
+  // 【宣言2】通常のイベント用
   public removeEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject,
     options?: boolean | EventListenerOptions
   ): void;
 
-  /**
-   * @description removeEventListnerのオーバーロード(実装)
-   * @author yoshitaka <sato-yoshitaka@aktio.co.jp>
-   * @date 11/06/2025
-   * @param {string} type
-   * @param {(EventListenerOrEventListenerObject | null)} listener
-   * @param {(boolean | EventListenerOptions)} [options]
-   * @memberof CameraManager
-   */
+  // 【実装】
   public removeEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject | null,
@@ -175,9 +109,9 @@ export class CameraManager extends EventTarget {
     accordionId?: string;
     badgeElementId?: string;
   }) {
-    //EventTargetを継承するのでsuper
     super();
     // デフォルトIDと引数で渡されたIDをマージ（合体）させる
+    // スプレッド構文(...)を使うことで、optionsの値がDEFAULT_IDSの値を上書きします。
     const finalIds = {
       ...CameraManager.DEFAULT_IDS,
       ...options,
@@ -189,6 +123,7 @@ export class CameraManager extends EventTarget {
         finalIds.videoElementId
       ) as HTMLVideoElement;
       if (video) this.videoElement = video;
+      // エラーを投げる代わりに、見つからなかった場合はnullのままにしておくのがより柔軟かもしれません。
     }
 
     if (finalIds.canvasElementId) {
@@ -229,7 +164,6 @@ export class CameraManager extends EventTarget {
         });
       }
     }
-    //バッジをつける
     if (finalIds.badgeElementId) {
       const badge = document.getElementById(
         finalIds.badgeElementId
@@ -238,11 +172,18 @@ export class CameraManager extends EventTarget {
         this.badgeElement = badge;
       }
     }
-    //初期方針でスタイルもJS内に内包（あとでCSSに分割した）
+    this.videoElement?.addEventListener("canplay", () => {
+      // 'canplay'イベントは、ビデオが再生を開始できる状態になったときに発生します。
+      if (!this.shootElement) {
+        return;
+      } else {
+        this.shootElement.disabled = false; // ボタンのdisabledを解除
+      }
+      console.log("カメラの準備が完了しました。撮影可能です。");
+    });
     // スタイルを適用し、写真を初期化
     this.applyStyles();
     this.initPhoto();
-    //shootボタンに写真を撮るイベントを付与
     this.shootElement?.addEventListener("click", () => {
       console.log("shoot");
       this.takePhoto();
@@ -279,7 +220,9 @@ export class CameraManager extends EventTarget {
     this.canvasElement.height = this.videoElement.clientHeight;
 
     const context = this.canvasElement.getContext("2d");
-    if (!context) return;
+    if (!context) {
+      return;
+    }
 
     context.fillStyle = "#AAA";
     context.fillRect(0, 0, this.canvasElement.width, this.canvasElement.height);
@@ -300,7 +243,7 @@ export class CameraManager extends EventTarget {
     // --- ここからが撮影処理の本体です ---
     console.log("shoot start");
 
-    // photoElementを表示状態に
+    // photoElementを表示状態にする準備（もし'd-none'のような非表示クラスがあれば削除）
     this.photoElement.classList.remove("d-none");
 
     // 1. ビデオのアスペクト比を保った描画サイズを計算します。
@@ -328,9 +271,9 @@ export class CameraManager extends EventTarget {
     const picturedata = this.canvasElement.toDataURL("image/png");
     this.photoElement.src = picturedata;
     this.capturedImageData = picturedata;
+    // 5. photo要素を確実に表示させます。
     this.photoElement.style.display = "block";
     this.badgeElement?.classList.remove("d-none");
-    //独自イベント発火 dataURLにbase64文字列を付与
     const takePhotoEvent = new CustomEvent<TakePhotoEventDetail>(
       "takePhotoEvent",
       {
@@ -420,6 +363,8 @@ export class CameraManager extends EventTarget {
       this.initPhoto();
     }
   }
+
+  // ... (他のメソッド)
 
   /**
    * カメラの映像を取得し、<video>要素に設定します。
